@@ -1,4 +1,7 @@
 gmail = {"addr": "iiicb105g3@gmail.com", "pwd": "cb105g3-III"}
+path_config = {
+    "crawler": "/temp/crawler"
+}
 
 
 def stop_watch(value):

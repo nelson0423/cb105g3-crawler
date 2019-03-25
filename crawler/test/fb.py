@@ -1,5 +1,6 @@
 """
 facebook
+Ref: CSS Selector
 """
 from crawler import gmail
 from selenium.webdriver import Chrome
@@ -16,10 +17,11 @@ driver.get(url_entry)
 
 
 def login():
-    driver.find_element_by_id("email").send_keys(gmail["addr"])
-    driver.find_element_by_id("pass").send_keys(gmail["pwd"])
-    driver.execute_script("console.log('send email/pass done ...');")
-    driver.find_element_by_xpath("//input[@data-testid='royal_login_button']").click()  # 登入button的id會動態產生, 所以改用xpath
+    driver.find_element_by_css_selector("#email").send_keys(gmail["addr"])
+    driver.find_element_by_css_selector("#pass").send_keys(gmail["pwd"])
+    # driver.execute_script("console.log('send email/pass done ...');")
+    driver.find_element_by_css_selector(
+        "input[data-testid='royal_login_button']").click()  # 登入button的id會動態產生, 改用attribute
     time.sleep(1)
 
 
@@ -32,12 +34,9 @@ def process_30birds():
     time.sleep(1)
     _len = 0
     while True:
-        # 處理延遲載入機制
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(3)  # 2秒有時會來不及
-        # reviews = [reviews.find_element_by_tag_name("p") for reviews in
-        #            driver.find_elements_by_xpath("//div[@class='_5pbx userContent _3576']")]
-        reviews = driver.find_elements_by_xpath("//div[@class='_5pbx userContent _3576']")
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # 處理延遲載入機制(JavaScript模擬滑鼠滾輪下滾)
+        time.sleep(3)  # 2秒有時會來不及, 所以改用3秒
+        reviews = driver.find_elements_by_css_selector("div[class='_5pbx userContent _3576']")
         print("已載入", len(reviews), "筆意見")
         if _len == len(reviews):
             break
