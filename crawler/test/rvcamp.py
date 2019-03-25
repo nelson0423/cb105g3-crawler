@@ -21,7 +21,7 @@ def extracttext1(datas):
         elif "網站" == title:
             content = [{d.text: d["href"]} for d in content.select("a")]
         elif "座標" == title:
-            if content.select_one("#gps_10"):
+            if content.select_one("#gps_10") is not None:
                 content = content.select_one("#gps_10").text.split("\xa0")
             else:
                 content = "N/A"
