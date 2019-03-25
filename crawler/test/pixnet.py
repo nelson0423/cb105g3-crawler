@@ -1,7 +1,7 @@
 """
 痞客邦
 """
-
+from crawler import logger
 import requests
 from bs4 import BeautifulSoup
 import warnings
@@ -13,13 +13,13 @@ def process(url):
     response = requests.get(url)
     response.encoding = "utf-8"  # 解決亂碼問題
     html = BeautifulSoup(response.text)
-    # print(html)
+    # logger.debug(html)
     # content = html.find("div", {"id": "article-content-inner"})
     content = html.select_one("div#article-content-inner")
     # contents = content.find_all("span")
     contents = content.select("span")
     text_content = "\n".join([str(c.text) for c in contents if hasattr(c, "text")])  # isinstance(c.next, str)
-    print(text_content)
+    logger.info(text_content)
 
 
 if __name__ == '__main__':

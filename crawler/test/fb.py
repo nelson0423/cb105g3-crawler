@@ -2,7 +2,7 @@
 facebook
 Ref: CSS Selector
 """
-from crawler import gmail
+from crawler import gmail, logger
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 import time
@@ -37,12 +37,12 @@ def process_30birds():
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # 處理延遲載入機制(JavaScript模擬滑鼠滾輪下滾)
         time.sleep(3)  # 2秒有時會來不及, 所以改用3秒
         reviews = driver.find_elements_by_css_selector("div[class='_5pbx userContent _3576']")
-        print("已載入", len(reviews), "筆意見")
+        logger.info("已載入", len(reviews), "筆意見")
         if _len == len(reviews):
             break
         _len = len(reviews)  # 筆數一樣表示沒有意見了
     for review in reviews:
-        print("id: {}, comment: {}".format(review.get_attribute("id"), review.find_element_by_tag_name("p").text))
+        logger.info("id: {}, comment: {}".format(review.get_attribute("id"), review.find_element_by_tag_name("p").text))
 
 
 # 社團: 頭家愛露營

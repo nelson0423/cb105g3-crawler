@@ -3,23 +3,22 @@
 Ref: CSS Selector
 """
 
-from crawler import stop_watch, path_config
+from crawler import stop_watch, logger, path_config, db_config, json_to_csv, csv_to_json
 import requests
 from bs4 import BeautifulSoup
 import warnings
 import time
-import pandas as pd
-import os
+from pymongo import MongoClient
 
 warnings.filterwarnings("ignore")
 
 
 def merge_text1(datas, row):
-    keymap = dict((("電話", "tel"), ("地址", "addr"), ("X網站", "web_site"), ("座標", "latlong")))
+    keymap = dict((("電話", "tel"), ("地址", "addr"), ("名稱", "camp_site"), ("X網站", "web_site"), ("座標", "latlong")))
     for data in datas:
         title = keymap.get(data[0].text)
         if title is None:
-            # print("title is None:", data[0].text)
+            logger.debug("title is None: {}".format(data[0].text))
             continue
         content = data[1]
         if "tel" == title:
@@ -28,7 +27,7 @@ def merge_text1(datas, row):
             content = [{d.text: d["href"]} for d in content.select("a")]
         elif "latlong" == title:
             if content.select_one("#gps_10") is not None:
-                content = content.select_one("#gps_10").text.split("\xa0")
+                content = ",".join(content.select_one("#gps_10").text.split("\xa0"))
             else:
                 content = "N/A"
         else:
@@ -37,9 +36,11 @@ def merge_text1(datas, row):
 
 
 def process(url):
+    """
+    將爬蟲內容轉成JSON
+    """
     total = []
     start = time.time()
-    # print("start:", start)
     response = requests.get(url)
     html = BeautifulSoup(response.text)
     menus = html.select_one("#home-menu").select("li > a")
@@ -49,57 +50,56 @@ def process(url):
         cnt_area = cnt_area + 1
         cnt_campsite = 0
         murl = menu["href"]
-        print("區域:", menu.text, "----------------------------")
-        # print("murl:", murl)
+        logger.info("區域: {} ----------------------------".format(menu.text))
+        logger.debug("murl: {}".format(murl))
         response = requests.get(murl)
         html = BeautifulSoup(response.text)
         nav = html.select_one("div.nav-links")  # 分頁導覽區域
         if nav is not None:
             last_page_num = int(
                 nav.select_one("a.page-numbers:nth-last-of-type(2)")["href"].split("/")[-1])  # 倒數第2個才是最後一頁
-            print("總共", last_page_num, "頁")
+            logger.info("總共{}頁".format(last_page_num))
             for num in range(last_page_num):
                 pnum = str(num + 1)
-                print(menu.text, "第", pnum, "頁", "----------------------------")
+                logger.info("{} - 第{}頁 ----------------------------".format(menu.text, pnum))
                 page_url = murl + "/page/" + pnum
-                # print("page_url:", page_url)
+                logger.debug("page_url: {}".format(page_url))
                 response = requests.get(page_url)
                 html = BeautifulSoup(response.text)
                 campsites = html.select("h2.entry-title-list > a")
                 for campsite in campsites:
                     cnt_campsite = cnt_campsite + 1
                     row = dict()
-                    row["_id"] = "campsite_" + format(cnt_area, "02d") + "_" + format(cnt_campsite, "04d")
+                    # row["_id"] = "campsite_" + format(cnt_area, "02d") + "_" + format(cnt_campsite, "04d")
                     row["location"] = menu.text
                     campsite_url = campsite["href"]
                     process_content(campsite_url, row)
-                    print("row:", row)
+                    logger.info("row: {}".format(row));
                     total.append(row)
-                    if cnt_area == 1 and cnt_campsite == 10:
-                        bk = True
+                    if False and cnt_area == 1 and cnt_campsite == 3:  # 限制爬的數量(False則不限制數量)
+                        bk = True  # Python沒有label, 所以用這種鳥方式
                     if bk:
                         break
                 # <<< end of page campsite for loop
                 if bk:
                     break
             # <<< end of location page for loop
-            if bk:
-                break
-        # <<< end of location menu for loop
-    print("cnt_campsite:", cnt_campsite)
+        if bk:
+            break
+    # <<< end of location menu for loop
+    logger.info("total count: {}".format(len(total)))
     end = time.time()
-    # print("end:", end)
     stop_watch(end - start)
     return total
 
 
 def process_content(content_url, row):
     try:
-        # print("content_url:", content_url)
+        logger.debug("content_url: {}".format(content_url))
         response = requests.get(content_url)
         html = BeautifulSoup(response.text)
-        print("entry-title: {}".format(html.select_one("h1.entry-title").text))
-        row["camp_site_name"] = html.select_one("h1.entry-title").text
+        logger.info("entry-title: {}".format(html.select_one("h1.entry-title").text))
+        row["camp_title"] = html.select_one("h1.entry-title").text
         text0 = [t.select_one("a").text for t in
                  html.select_one("#text0").select(
                      "div[class^='t-camp-']"  # 為t-camp-開頭
@@ -107,32 +107,81 @@ def process_content(content_url, row):
                      + ":not([class='t-camp-area'])"  # 不為t-camp-area
                  )
                  ]
-        # print("\ttext0: {}".format(text0))
         row["features"] = text0
         text1 = [t.select("span[class^=t-]") for t in html.select_one("#text1").select("li")]
         merge_text1(text1, row)
     except Exception as e:
-        print("Error: {}, content_url: {}".format(e, content_url))
+        logger.error("Error: {}, content_url: {}".format(e, content_url))
 
 
-def json_to_csv(json_data, file_path):
-    import csv
-    pdir = os.path.dirname(file_path)
-    if not os.path.exists(pdir):
-        os.makedirs(pdir)
-    pd.DataFrame(json_data).to_csv(file_path, header=True, index=False, quoting=csv.QUOTE_ALL)
-
-
-def json_to_mongodb():
+def json_to_mongodb(json_data, drop):
+    """
+    JSON寫入MongoDB
+    """
+    # from bson import json_util
+    conn = None
+    try:
+        conn = MongoClient(db_config["mongodb"])
+        db = conn.test
+        coll = db.camp_list
+        if drop:
+            coll.drop()
+        for doc in json_data:
+            # doc = json.loads(json.dumps(doc, default=json_util.default))  # trans dict in list to json -> 多此一舉
+            # fdoc = coll.find_one({"camp_title": doc["camp_title"]})
+            coll.update({"camp_title": doc["camp_title"]}, doc, upsert=True)
+    except Exception as e:
+        logger.error("Error:", e)
+    finally:
+        if conn:
+            conn.close()
+            logger.debug("connection closed ...")
     pass
 
 
 def csv_to_mongodb(file_path):
-    pass
+    """
+    CSV寫入MongoDB
+    """
+    json_data = csv_to_json(file_path)
+    json_to_mongodb(json_data, False)
 
 
 if __name__ == '__main__':
-    url = "https://rvcamp.org/"
-    json_data = process(url)
     file_path = path_config["crawler"] + "/rvcamp.csv"
-    json_to_csv(json_data, file_path)
+
+    """
+    將爬蟲內容轉成JSON
+    """
+    # logger.info(">>> 將爬蟲內容轉成JSON - Start")
+    # url = "https://rvcamp.org/"
+    # json_data = process(url)
+    # logger.info(">>> 將爬蟲內容轉成JSON - End")
+
+    """
+    JSON轉成CSV
+    """
+    # logger.info(">>> JSON轉成CSV - Start")
+    # json_to_csv(json_data, file_path)
+    # logger.info(">>> JSON轉成CSV - End")
+
+    """
+    JSON寫入MongoDB
+    """
+    # logger.info(">>> JSON寫入MongoDB - Start")
+    # json_to_mongodb(json_data, False)
+    # logger.info(">>> JSON寫入MongoDB - End")
+
+    """
+    CSV轉成JSON
+    """
+    # logger.info(">>> CSV轉成JSON - Start")
+    # csv_to_json(file_path)
+    # logger.info(">>> CSV轉成JSON - End")
+
+    """
+    CSV寫入MongoDB
+    """
+    logger.info(">>> CSV寫入MongoDB - Start")
+    csv_to_mongodb(file_path)
+    logger.info(">>> CSV寫入MongoDB - End")
