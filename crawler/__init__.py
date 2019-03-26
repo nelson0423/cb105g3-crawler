@@ -45,6 +45,15 @@ def csv_to_json(file_path):
     CSV轉成JSON
     """
     df = pd.read_csv(file_path, encoding="utf-8")
+
+    def trans_if_json(data):
+        try:
+            return eval(data)
+        except:
+            return data
+
+    for col in df.columns:
+        df[col] = df[col].apply(trans_if_json)
     return json.loads(df.to_json(orient="records"))
 
 

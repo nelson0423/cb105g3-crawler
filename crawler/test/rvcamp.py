@@ -118,6 +118,7 @@ def json_to_mongodb(json_data, drop):
     """
     JSON寫入MongoDB
     """
+    # import json
     # from bson import json_util
     conn = None
     try:
@@ -139,12 +140,12 @@ def json_to_mongodb(json_data, drop):
     pass
 
 
-def csv_to_mongodb(file_path):
+def csv_to_mongodb(file_path, drop):
     """
     CSV寫入MongoDB
     """
     json_data = csv_to_json(file_path)
-    json_to_mongodb(json_data, False)
+    json_to_mongodb(json_data, drop)
 
 
 if __name__ == '__main__':
@@ -153,17 +154,17 @@ if __name__ == '__main__':
     """
     將爬蟲內容轉成JSON
     """
-    # logger.info(">>> 將爬蟲內容轉成JSON - Start")
-    # url = "https://rvcamp.org/"
-    # json_data = process(url)
-    # logger.info(">>> 將爬蟲內容轉成JSON - End")
+    logger.info(">>> 將爬蟲內容轉成JSON - Start")
+    url = "https://rvcamp.org/"
+    json_data = process(url)
+    logger.info(">>> 將爬蟲內容轉成JSON - End")
 
     """
     JSON轉成CSV
     """
-    # logger.info(">>> JSON轉成CSV - Start")
-    # json_to_csv(json_data, file_path)
-    # logger.info(">>> JSON轉成CSV - End")
+    logger.info(">>> JSON轉成CSV - Start")
+    json_to_csv(json_data, file_path)
+    logger.info(">>> JSON轉成CSV - End")
 
     """
     JSON寫入MongoDB
@@ -176,12 +177,13 @@ if __name__ == '__main__':
     CSV轉成JSON
     """
     # logger.info(">>> CSV轉成JSON - Start")
-    # csv_to_json(file_path)
+    # d = csv_to_json(file_path)
+    # # print("### ", d[0]["features"], type(d[0]["features"]))
     # logger.info(">>> CSV轉成JSON - End")
 
     """
     CSV寫入MongoDB
     """
     logger.info(">>> CSV寫入MongoDB - Start")
-    csv_to_mongodb(file_path)
+    csv_to_mongodb(file_path, True)
     logger.info(">>> CSV寫入MongoDB - End")
