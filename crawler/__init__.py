@@ -5,6 +5,9 @@ import os
 import json
 import csv
 
+log_dir = "/logs/crawler/"
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
 log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'log_config.ini')
 logging.config.fileConfig(log_file_path)
 logger = logging.getLogger("crawler")
@@ -60,6 +63,7 @@ def csv_to_json(file_path):
 # __all__ = ["logging"]
 
 if __name__ == '__main__':
-    print(os.path.abspath(__file__))
-    print(os.path.dirname(os.path.abspath(__file__)))
-    print(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'log_config.ini'))
+    logger.debug("Log中文測試 abc 123")
+    # logger.debug(os.path.abspath(__file__))
+    # logger.debug(os.path.dirname(os.path.abspath(__file__)))
+    # logger.debug(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'log_config.ini'))
