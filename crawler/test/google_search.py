@@ -11,25 +11,33 @@ import time
 warnings.filterwarnings("ignore")
 
 
-def process(url, search_filter, collect_cnt, max_start):
+def process(keyword, search_filter, collect_cnt, max_start):
+    '''
+    :param keyword: 搜尋關鍵字
+    :param search_filter: 過濾器實作(generator)
+    :param collect_cnt: 需蒐集的筆數
+    :param max_start: 最大分頁總筆數
+    :return: 搜尋到的網址陣列
+    '''
+    logger.debug("keyword: {}, collect_cnt{}, max_start: {}".format(keyword, collect_cnt, max_start))
     ret = list()
-    url_pattern = "{}&start={}"
+    url_pattern = "https://www.google.com/search?q={}&start={}"
     for start in range(0, max_start, 10):
-        url = url_pattern.format(url, start)
+        url = url_pattern.format(keyword, start)
         logger.debug("url: {}".format(url))
         response = requests.get(url)
         html = BeautifulSoup(response.text)
-        surl_list = [unquote(d["href"], "utf-8").replace("/url?q=", "").split("&sa=")[0] for d in
-                     html.select("h3.r > a")]
-        ret.extend(search_filter(surl_list))
-        ret = ret[0: collect_cnt]if len(ret) > collect_cnt else ret
+        url_list = [unquote(d["href"], "utf-8").replace("/url?q=", "").split("&sa=")[0] for d in
+                    html.select("h3.r > a")]  # 該頁搜尋結果連結
+        ret.extend(search_filter(url_list))
+        ret = ret[0: collect_cnt] if len(ret) > collect_cnt else ret
         if len(ret) == collect_cnt:
             break
     return ret
 
 
 if __name__ == '__main__':
-    url = "https://www.google.com/search?q=露營 朱比特咖啡"
+    keyword = "露營 朱比特咖啡"
 
 
     def search_filter(url_list):
@@ -39,5 +47,5 @@ if __name__ == '__main__':
 
     collect_cnt = 3
     max_start = 50
-    result = process(url, search_filter, collect_cnt, max_start)
-    logger.debug(result)
+    result = process(keyword, search_filter, collect_cnt, max_start)
+    logger.debug("result: {}".format(result))
