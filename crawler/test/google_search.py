@@ -12,13 +12,13 @@ warnings.filterwarnings("ignore")
 
 
 def process(keyword, search_filter, collect_cnt, max_start):
-    '''
+    """
     :param keyword: 搜尋關鍵字
     :param search_filter: 過濾器實作(generator)
     :param collect_cnt: 需蒐集的筆數
     :param max_start: 最大分頁總筆數
     :return: 搜尋到的網址陣列
-    '''
+    """
     logger.debug("keyword: {}, collect_cnt{}, max_start: {}".format(keyword, collect_cnt, max_start))
     ret = list()
     url_pattern = "https://www.google.com/search?q={}&start={}"
