@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import warnings
 import time
 from pymongo import MongoClient
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 
@@ -148,23 +149,39 @@ def csv_to_mongodb(file_path, drop):
     json_to_mongodb(json_data, drop)
 
 
+def proces_pixnet_blog(file_path):
+    """
+    依CSV找出營地的痞客邦部落格
+    :param file_path: csv檔案路徑
+    :return:
+    """
+    df = pd.read_csv(file_path, encoding="utf-8")
+    sr_camp_site = df["camp_site"]  # <class 'pandas.core.series.Series'>
+    # for d in sr_camp_site.items():
+    #     print(d)
+    # for d in sr_camp_site:
+    #     print(d)
+    # for k, v in enumerate(sr_camp_site):
+    #     print(k, v)
+
+
 if __name__ == '__main__':
     file_path = path_config["crawler"] + "/rvcamp.csv"
 
     """
     將爬蟲內容轉成JSON
     """
-    logger.info(">>> 將爬蟲內容轉成JSON - Start")
-    url = "https://rvcamp.org/"
-    json_data = process(url)
-    logger.info(">>> 將爬蟲內容轉成JSON - End")
+    # logger.info(">>> 將爬蟲內容轉成JSON - Start")
+    # url = "https://rvcamp.org/"
+    # json_data = process(url)
+    # logger.info(">>> 將爬蟲內容轉成JSON - End")
 
     """
     JSON轉成CSV
     """
-    logger.info(">>> JSON轉成CSV - Start")
-    json_to_csv(json_data, file_path)
-    logger.info(">>> JSON轉成CSV - End")
+    # logger.info(">>> JSON轉成CSV - Start")
+    # json_to_csv(json_data, file_path)
+    # logger.info(">>> JSON轉成CSV - End")
 
     """
     JSON寫入MongoDB
@@ -184,6 +201,13 @@ if __name__ == '__main__':
     """
     CSV寫入MongoDB
     """
-    logger.info(">>> CSV寫入MongoDB - Start")
-    csv_to_mongodb(file_path, True)
-    logger.info(">>> CSV寫入MongoDB - End")
+    # logger.info(">>> CSV寫入MongoDB - Start")
+    # csv_to_mongodb(file_path, True)
+    # logger.info(">>> CSV寫入MongoDB - End")
+
+    """
+    依CSV找出營地的痞客邦部落格
+    """
+    logger.info(">>> 依CSV找出營地的痞客邦部落格 - Start")
+    proces_pixnet_blog(file_path)
+    logger.info(">>> 依CSV找出營地的痞客邦部落格 - End")
