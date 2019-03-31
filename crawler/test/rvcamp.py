@@ -41,7 +41,6 @@ def process(url):
     將爬蟲內容轉成JSON
     """
     total = []
-    start = time.time()
     response = requests.get(url)
     html = BeautifulSoup(response.text)
     menus = html.select_one("#home-menu").select("li > a")
@@ -89,8 +88,6 @@ def process(url):
             break
     # <<< end of location menu for loop
     logger.info("total count: {}".format(len(total)))
-    end = time.time()
-    stop_watch(end - start)
     return total
 
 
@@ -115,7 +112,7 @@ def process_content(content_url, row):
         logger.error("Error: {}, content_url: {}".format(e, content_url))
 
 
-def json_to_mongodb(json_data, drop):
+def json_to_mongodb_rvcamp(json_data, drop):
     """
     JSON寫入MongoDB
     """
@@ -138,34 +135,85 @@ def json_to_mongodb(json_data, drop):
         if conn:
             conn.close()
             logger.debug("connection closed ...")
-    pass
 
 
-def csv_to_mongodb(file_path, drop):
+def json_to_mongodb_pixnet(json_data, drop):
+    """
+    JSON寫入MongoDB
+    """
+    # import json
+    # from bson import json_util
+    conn = None
+    try:
+        conn = MongoClient(db_config["mongodb"])
+        db = conn.test
+        coll = db.blog_pixnet
+        if drop:
+            coll.drop()
+        for doc in json_data:
+            coll.update({"camp_title": doc["camp_title"], "pixnet_url": doc["pixnet_url"]}, doc, upsert=True)
+    except Exception as e:
+        logger.error("Error:", e)
+    finally:
+        if conn:
+            conn.close()
+            logger.debug("connection closed ...")
+
+
+def csv_to_mongodb_rvcamp(file_path, drop):
     """
     CSV寫入MongoDB
     """
     json_data = csv_to_json(file_path)
-    json_to_mongodb(json_data, drop)
+    json_to_mongodb_rvcamp(json_data, drop)
 
 
-def proces_pixnet_blog(file_path):
+def proces_pixnet_blog(camp_list):
     """
-    依CSV找出營地的痞客邦部落格
-    :param file_path: csv檔案路徑
+    依JSON找出營地的痞客邦部落格
+    :param camp_list: 營地資訊JSON
     :return:
     """
-    df = pd.read_csv(file_path, encoding="utf-8")
-    sr_camp_site = df["camp_site"]  # <class 'pandas.core.series.Series'>
-    # for d in sr_camp_site.items():
-    #     print(d)
-    # for d in sr_camp_site:
-    #     print(d)
-    # for k, v in enumerate(sr_camp_site):
-    #     print(k, v)
+    datas = list()
+    import crawler.test.google_search as google_search
+    import crawler.test.pixnet as pixnet
+    def search_filter(url_list):
+        for u in url_list:
+            if u.find("pixnet.net/blog") != -1: yield u
+
+    for idx in range(len(camp_list)):
+        camp = camp_list[idx]
+        camp_title = camp["camp_title"]
+        camp_site = camp["camp_site"]
+        logger.info("idx: {}, camp_site: {}, camp_title: {}".format(idx, camp_site, camp_title))
+        collect_cnt = 3
+        max_start = 50
+        search_result = google_search.process(camp_site, search_filter, collect_cnt, max_start)
+        logger.debug("search_result: {}".format(search_result))
+        for url in search_result:
+            content = pixnet.process(url)["text_content"]
+            data = dict()
+            data["camp_site"] = camp_site
+            data["camp_title"] = camp_title
+            data["pixnet_url"] = url
+            data["content"] = content  # .replace("\"", "")
+            datas.append(data)
+    return datas
+
+
+def main():
+    start = time.time()
+    json_data_rvcamp = process("https://rvcamp.org/")
+    json_data_pixnet = proces_pixnet_blog(json_data_rvcamp)
+    json_to_mongodb_rvcamp(json_data_rvcamp, True)
+    json_to_mongodb_pixnet(json_data_pixnet, True)
+    end = time.time()
+    stop_watch(end - start)
 
 
 if __name__ == '__main__':
+    main()
+
     file_path = path_config["crawler"] + "/rvcamp.csv"
 
     """
@@ -187,7 +235,7 @@ if __name__ == '__main__':
     JSON寫入MongoDB
     """
     # logger.info(">>> JSON寫入MongoDB - Start")
-    # json_to_mongodb(json_data, False)
+    # json_to_mongodb_rvcamp(json_data, False)
     # logger.info(">>> JSON寫入MongoDB - End")
 
     """
@@ -202,12 +250,5 @@ if __name__ == '__main__':
     CSV寫入MongoDB
     """
     # logger.info(">>> CSV寫入MongoDB - Start")
-    # csv_to_mongodb(file_path, True)
+    # csv_to_mongodb_rvcamp(file_path, True)
     # logger.info(">>> CSV寫入MongoDB - End")
-
-    """
-    依CSV找出營地的痞客邦部落格
-    """
-    logger.info(">>> 依CSV找出營地的痞客邦部落格 - Start")
-    proces_pixnet_blog(file_path)
-    logger.info(">>> 依CSV找出營地的痞客邦部落格 - End")

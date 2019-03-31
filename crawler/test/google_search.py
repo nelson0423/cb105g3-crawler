@@ -24,7 +24,7 @@ def process(keyword, search_filter, collect_cnt, max_start):
     url_pattern = "https://www.google.com/search?q={}&start={}"
     for start in range(0, max_start, 10):
         url = url_pattern.format(keyword, start)
-        logger.debug("url: {}".format(url))
+        # logger.debug("url: {}".format(url))
         response = requests.get(url)
         html = BeautifulSoup(response.text)
         url_list = [unquote(d["href"], "utf-8").replace("/url?q=", "").split("&sa=")[0] for d in
