@@ -28,6 +28,7 @@ def process(url):
         # logger.info(ret["text_content"])
     except Exception as e:
         logger.error("Error: {}".format(e))
+        ret["text_content"] = "{}".format(e)
     return ret
 
 

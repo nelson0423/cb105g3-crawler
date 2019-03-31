@@ -37,7 +37,7 @@ def process(keyword, search_filter, collect_cnt, max_start):
 
 
 if __name__ == '__main__':
-    keyword = "露營 朱比特咖啡"
+    keyword = "\"露營\"+\"朱比特咖啡\""
 
 
     def search_filter(url_list):
