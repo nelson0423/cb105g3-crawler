@@ -188,7 +188,7 @@ def proces_pixnet_blog(camp_list):
         logger.info("idx: {}, camp_site: {}, camp_title: {}".format(idx, camp_site, camp_title))
         collect_cnt = 3
         max_start = 50
-        search_result = google_search.process(camp_site, search_filter, collect_cnt, max_start)
+        search_result = google_search.process("露營+" + camp_site, search_filter, collect_cnt, max_start)
         logger.debug("search_result: {}".format(search_result))
         for url in search_result:
             content = pixnet.process(url)["text_content"]
