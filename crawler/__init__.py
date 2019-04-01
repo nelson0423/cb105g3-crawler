@@ -4,6 +4,9 @@ import pandas as pd
 import os
 import json
 import csv
+import requests
+import time
+import random
 
 log_dir = "/logs/crawler/"
 if not os.path.exists(log_dir):
@@ -58,6 +61,51 @@ def csv_to_json(file_path):
     for col in df.columns:
         df[col] = df[col].apply(trans_if_json)
     return json.loads(df.to_json(orient="records"))
+
+
+user_agents = ["Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20130406 Firefox/23.0", \
+               "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0", \
+               "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/533+ \
+               (KHTML, like Gecko) Element Browser 5.0", \
+               "IBM WebExplorer /v0.94', 'Galaxy/1.0 [en] (Mac OS X 10.5.6; U; en)", \
+               "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)", \
+               "Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14", \
+               "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) \
+                Version/6.0 Mobile/10A5355d Safari/8536.25", \
+               "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) \
+                Chrome/28.0.1468.0 Safari/537.36", \
+               "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0; TheWorld)"]
+proxy_list = [
+    "http://211.23.149.28:80",
+    "http://211.23.149.29:80",
+    "http://122.116.67.146:60730"
+]
+delays = [7, 4, 6, 2, 10, 19]
+random_urls = [
+    "http://www.u-car.com.tw/",
+    "http://www.piaa.com.tw/",
+    "https://my.garmin.com.tw/",
+    "http://www.appledaily.com.tw/",
+    "https://www.rakuten.co.jp/shop/"
+]
+
+
+def random_requests_get(url):
+    headers = {
+        "user-agent": random.choice(user_agents),
+        "referrer": "https://google.com",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Pragma": "no-cache"
+    }
+    proxies = {
+        "http": random.choice(proxy_list)
+    }
+    requests.get(random.choice(random_urls))
+    time.sleep(random.choice(delays))
+    response = requests.get(url, headers=headers, proxies=proxies)
+    return response
 
 
 # __all__ = ["logging"]

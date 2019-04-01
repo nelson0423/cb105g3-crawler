@@ -76,7 +76,7 @@ def process(url):
                     process_content(campsite_url, row)
                     logger.info("row: {}".format(row));
                     total.append(row)
-                    if False and cnt_area == 1 and cnt_campsite == 3:  # 限制爬的數量(False則不限制數量)
+                    if False and cnt_area == 1 and cnt_campsite == 10:  # 限制爬的數量(False則不限制數量)
                         bk = True  # Python沒有label, 所以用這種鳥方式
                     if bk:
                         break
@@ -122,7 +122,7 @@ def json_to_mongodb_rvcamp(json_data, drop):
     try:
         conn = MongoClient(db_config["mongodb"])
         db = conn.test
-        coll = db.camp_list
+        coll = db.rvcamp
         if drop:
             coll.drop()
         for doc in json_data:
@@ -187,8 +187,9 @@ def proces_pixnet_blog(camp_list):
         camp_site = camp["camp_site"]
         logger.info("idx: {}, camp_site: {}, camp_title: {}".format(idx, camp_site, camp_title))
         collect_cnt = 3
-        max_start = 50
-        search_result = google_search.process("\"露營\"+\"" + camp_site + "\"", search_filter, collect_cnt, max_start)
+        max_start = 30
+        search_result = google_search.process("\"露營\"+\"pixnet\"+\"" + camp_site + "\"", search_filter, collect_cnt,
+                                              max_start)
         logger.debug("search_result: {}".format(search_result))
         for url in search_result:
             content = pixnet.process(url)["text_content"]
