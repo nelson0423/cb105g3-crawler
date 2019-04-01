@@ -10,6 +10,7 @@ import warnings
 import time
 from pymongo import MongoClient
 import pandas as pd
+import random
 
 warnings.filterwarnings("ignore")
 
@@ -180,8 +181,10 @@ def proces_pixnet_blog(camp_list):
     def search_filter(url_list):
         for u in url_list:
             if u.find("pixnet.net/blog") != -1: yield u
-
+    delays = [9, 10, 2, 5]
     for idx in range(len(camp_list)):
+        if idx % random.choice(delays) == 0:
+            time.sleep(30)
         camp = camp_list[idx]
         camp_title = camp["camp_title"]
         camp_site = camp["camp_site"]
@@ -205,8 +208,8 @@ def proces_pixnet_blog(camp_list):
 def main():
     start = time.time()
     json_data_rvcamp = process("https://rvcamp.org/")
-    json_data_pixnet = proces_pixnet_blog(json_data_rvcamp)
     json_to_mongodb_rvcamp(json_data_rvcamp, True)
+    json_data_pixnet = proces_pixnet_blog(json_data_rvcamp)
     json_to_mongodb_pixnet(json_data_pixnet, True)
     end = time.time()
     stop_watch(end - start)

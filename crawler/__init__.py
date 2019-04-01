@@ -80,7 +80,7 @@ proxy_list = [
     "http://211.23.149.29:80",
     "http://122.116.67.146:60730"
 ]
-delays = [7, 4, 6, 2, 10, 19]
+delays = [10, 12, 13, 14, 15, 16, 17, 18, 19]
 random_urls = [
     "http://www.u-car.com.tw/",
     "http://www.piaa.com.tw/",
