@@ -28,21 +28,22 @@ def login():
 # 粉專: 山林鳥日子
 def process_30birds():
     login()
-    url = "https://www.facebook.com/30birdz/"
-    url_reviews = url + "reviews/"
-    driver.get(url_reviews)
-    time.sleep(1)
-    _len = 0
-    while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # 處理延遲載入機制(JavaScript模擬滑鼠滾輪下滾)
-        time.sleep(3)  # 2秒有時會來不及, 所以改用3秒
-        reviews = driver.find_elements_by_css_selector("div[class='_5pbx userContent _3576']")
-        logger.info("已載入", len(reviews), "筆意見")
-        if _len == len(reviews):
-            break
-        _len = len(reviews)  # 筆數一樣表示沒有意見了
-    for review in reviews:
-        logger.info("id: {}, comment: {}".format(review.get_attribute("id"), review.find_element_by_tag_name("p").text))
+    urls = ["https://www.facebook.com/微笑山丘-223226418074079/", "https://www.facebook.com/30birdz/"]
+    for url in urls:
+        url_reviews = url + "reviews/"
+        driver.get(url_reviews)
+        time.sleep(1)
+        _len = 0
+        while True:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # 處理延遲載入機制(JavaScript模擬滑鼠滾輪下滾)
+            time.sleep(3)  # 2秒有時會來不及, 所以改用3秒
+            reviews = driver.find_elements_by_css_selector("div[class='_5pbx userContent _3576']")
+            logger.info("已載入", len(reviews), "筆意見")
+            if _len == len(reviews):
+                break
+            _len = len(reviews)  # 筆數一樣表示沒有意見了
+        for review in reviews:
+            logger.info("id: {}, comment: {}".format(review.get_attribute("id"), review.find_element_by_tag_name("p").text))
 
 
 # 社團: 頭家愛露營
