@@ -104,7 +104,8 @@ def random_requests_get(url):
     }
     requests.get(random.choice(random_urls))
     time.sleep(random.choice(delays))
-    response = requests.get(url, headers=headers, proxies=proxies)
+    # response = requests.get(url, headers=headers, proxies=proxies)
+    response = requests.get(url)
     return response
 
 

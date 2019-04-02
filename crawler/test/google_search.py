@@ -30,9 +30,9 @@ def process(keyword, search_filter, collect_cnt, max_start):
             html = BeautifulSoup(response.text)
             url_list = [unquote(d["href"], "utf-8").replace("/url?q=", "").split("&sa=")[0] for d in
                         html.select("h3.r > a")]  # 該頁搜尋結果連結
-            if len(url_list) == 0:
-                break
             ret.extend(search_filter(url_list))
+            if len(ret) == 0:
+                break
             ret = ret[0: collect_cnt] if len(ret) > collect_cnt else ret
             if len(ret) == collect_cnt:
                 break
@@ -42,7 +42,8 @@ def process(keyword, search_filter, collect_cnt, max_start):
 
 
 if __name__ == '__main__':
-    keyword = "\"露營\"+\"pixnet\"+\"朱比特咖啡\""
+    # keyword = "\"露營\"+\"痞客邦\"+\"山林鳥日子\""
+    keyword = "露營+痞客邦+山林鳥日子"
 
 
     def search_filter(url_list):
