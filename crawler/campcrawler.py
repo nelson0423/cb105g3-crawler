@@ -138,7 +138,8 @@ class CampCrawler(object):
             html = BeautifulSoup(response.text)
             # logger.debug(html)
             article_content = html.select_one("div#article-content-inner")
-            text_content = self.__get_text_content(article_content.select("*"))
+            # text_content = self.__get_text_content(article_content.select("*"))
+            text_content = "\n".join(c.strip() for c in article_content.text.split("\n") if "" != c.strip())
             ret["text_content"] = text_content
             # logger.info(ret["text_content"])
         except Exception as e:
@@ -246,7 +247,7 @@ class CampCrawler(object):
         time.sleep(1)
         return driver
 
-    def extrace_fb_comment(self, camp_list):
+    def extract_fb_comment(self, camp_list):
         datas = list()
         for camp in camp_list:
             web_site = camp["web_site"]
@@ -341,7 +342,7 @@ if __name__ == '__main__':
     """
     將露營窩所記錄的fb粉專, 爬出評論並寫入mongodb
     """
-    fb_json = cc.extrace_fb_comment(rvcamp_json)
+    fb_json = cc.extract_fb_comment(rvcamp_json)
     # logger.debug(fb_json)
     cc.fb_to_mongodb(fb_json, True)
     json_to_csv(fb_json, fb_file_path)

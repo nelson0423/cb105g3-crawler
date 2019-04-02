@@ -19,6 +19,7 @@ def process(url):
         # logger.debug(html)
         article_content = html.select_one("div#article-content-inner")
         text_content = get_text_content(article_content.select("*"))
+        # print("\n".join(c.strip() for c in article_content.text.split("\n") if "" != c.strip()))
         # span_contents = article_content.select("span")
         # text_content = "\n".join([str(c.find(text=True, recursive=False)) for c in contents if hasattr(c, "text")])
         # text_content = get_text_content(span_contents)
@@ -26,7 +27,7 @@ def process(url):
         #     p_contents = article_content.select("p")
         #     text_content = get_text_content(p_contents)
         ret["text_content"] = text_content
-        logger.info(ret["text_content"])
+        # logger.info(ret["text_content"])
     except Exception as e:
         logger.error("Error: {}".format(e))
         ret["text_content"] = "{}".format(e)
