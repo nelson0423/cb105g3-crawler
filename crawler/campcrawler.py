@@ -281,7 +281,7 @@ class CampCrawler(object):
                         "window.scrollTo(0, document.body.scrollHeight);")  # 處理延遲載入機制(JavaScript模擬滑鼠滾輪下滾)
                     time.sleep(3)
                     reviews = driver.find_elements_by_css_selector("div[class='_5pbx userContent _3576']")
-                    logger.info("已載入", len(reviews), "筆意見")
+                    logger.info("已載入{}筆意見".format(len(reviews)))
                     if _len == len(reviews):
                         break
                     _len = len(reviews)  # 筆數一樣表示沒有意見了
