@@ -27,7 +27,7 @@ def process(url):
         #     p_contents = article_content.select("p")
         #     text_content = get_text_content(p_contents)
         ret["text_content"] = text_content
-        # logger.info(ret["text_content"])
+        logger.info(ret["text_content"])
     except Exception as e:
         logger.error("Error: {}".format(e))
         ret["text_content"] = "{}".format(e)
