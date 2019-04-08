@@ -348,8 +348,8 @@ class CampCrawler(object):
                         data["title"] = title
                         data["url"] = url
                         data["content"] = content
+                        data_list.append(data)
                     data["style"].append(style)
-                    data_list.append(data)
         return data_list
 
     def evshhips_to_mongodb(self, json_data, drop):
@@ -404,5 +404,5 @@ if __name__ == '__main__':
     將何師夫痞客邦懶人包, 爬出部落格並寫入mongodb
     """
     evshhips_json = cc.extract_evshhips()
-    cc.evshhips_to_mongodb(evshhips_json, True)
+    # cc.evshhips_to_mongodb(evshhips_json, True)
     json_to_csv(evshhips_json, evshhips_file_path)
