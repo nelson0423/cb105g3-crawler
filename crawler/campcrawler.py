@@ -140,6 +140,7 @@ class CampCrawler(object):
             article_content = html.select_one("div#article-content-inner")
             # text_content = self.__get_text_content(article_content.select("*"))
             text_content = "\n".join(c.strip() for c in article_content.text.split("\n") if "" != c.strip())
+            text_content = text_content.replace("\xa0", " ")
             ret["text_content"] = text_content
             # logger.info(ret["text_content"])
         except Exception as e:
@@ -315,6 +316,59 @@ class CampCrawler(object):
                 conn.close()
                 logger.debug("connection closed ...")
 
+    def extract_evshhips(self):
+        data_list = list()
+        url = "https://evshhips.pixnet.net/blog/category/4337992"
+        response = requests.get(url)
+        response.encoding = "utf-8"  # 解決亂碼問題
+        html = BeautifulSoup(response.text)
+        mylink = html.select_one("#mylink")
+
+        def get_data_by_url(url):
+            data = dict()
+            for d in data_list:
+                if url == d.get("url"):
+                    data = d
+                    break
+            return data
+
+        for type in mylink.select("div.inner-box"):
+            if type.select_one("img"):
+                # logger.debug(type)
+                style = type.select_one("h6").text.strip().split(" ")[0]
+                url_list = type.select("a")
+                for u in url_list:
+                    title = u.text
+                    url = u["href"]
+                    logger.debug("style: {}, title: {}, url: {}".format(style, title, url))
+                    content = self.extract_pixnet(url)["text_content"]
+                    data = get_data_by_url(url)
+                    if not data.get("url"):
+                        data["style"] = list()
+                        data["title"] = title
+                        data["url"] = url
+                        data["content"] = content
+                    data["style"].append(style)
+                    data_list.append(data)
+        return data_list
+
+    def evshhips_to_mongodb(self, json_data, drop):
+        conn = None
+        try:
+            conn = MongoClient(db_config["mongodb"])
+            db = conn.test
+            coll = db.evshhips
+            if drop:
+                coll.drop()
+            for doc in json_data:
+                coll.update({"style": doc["style"], "title": doc["title"], "url": doc["url"]}, doc, upsert=True)
+        except Exception as e:
+            logger.error("Error:", e)
+        finally:
+            if conn:
+                conn.close()
+                logger.debug("connection closed ...")
+
 
 if __name__ == '__main__':
     cc = CampCrawler()
@@ -322,6 +376,7 @@ if __name__ == '__main__':
     rvcamp_file_path = path_config["crawler"] + "/rvcamp.csv"
     pixnet_file_path = path_config["crawler"] + "/pixnet.csv"
     fb_file_path = path_config["crawler"] + "/fb.csv"
+    evshhips_file_path = path_config["crawler"] + "/evshhips.csv"
     """
     爬露營窩轉到csv和mongodb
     """
@@ -331,18 +386,23 @@ if __name__ == '__main__':
     """
     將露營窩csv轉成json
     """
-    rvcamp_json = csv_to_json(rvcamp_file_path)
+    # rvcamp_json = csv_to_json(rvcamp_file_path)
     # rvcamp_json = rvcamp_json[:10]
     """
     將露營窩json, 用google search方式查出痞客邦網址, 並爬出資料寫入mongodb
     """
-    pixnet_json = cc.google_search_extract_pixnet_blog(rvcamp_json)
-    cc.pixnet_to_mongodb(pixnet_json, True)
-    json_to_csv(pixnet_json, pixnet_file_path)
+    # pixnet_json = cc.google_search_extract_pixnet_blog(rvcamp_json)
+    # cc.pixnet_to_mongodb(pixnet_json, True)
+    # json_to_csv(pixnet_json, pixnet_file_path)
     """
     將露營窩所記錄的fb粉專, 爬出評論並寫入mongodb
     """
-    fb_json = cc.extract_fb_comment(rvcamp_json)
-    # logger.debug(fb_json)
-    cc.fb_to_mongodb(fb_json, True)
-    json_to_csv(fb_json, fb_file_path)
+    # fb_json = cc.extract_fb_comment(rvcamp_json)
+    # cc.fb_to_mongodb(fb_json, True)
+    # json_to_csv(fb_json, fb_file_path)
+    """
+    將何師夫痞客邦懶人包, 爬出部落格並寫入mongodb
+    """
+    evshhips_json = cc.extract_evshhips()
+    cc.evshhips_to_mongodb(evshhips_json, True)
+    json_to_csv(evshhips_json, evshhips_file_path)
