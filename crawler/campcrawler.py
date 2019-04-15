@@ -9,6 +9,8 @@ import pandas as pd
 import random
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
+import os
+import MySQLdb
 
 warnings.filterwarnings("ignore")
 
@@ -369,6 +371,131 @@ class CampCrawler(object):
                 conn.close()
                 logger.debug("connection closed ...")
 
+    def get_camp_style_dict(self):
+        style_dict = dict()
+        mydict_base_dir = "./mydict"
+        f_prefix = "camp_style_"
+        for dir_path, dir_names, file_names in os.walk(mydict_base_dir):
+            for single_file in file_names:
+                if single_file.startswith(f_prefix):
+                    with open(os.path.join(dir_path, single_file), "r", encoding="utf-8") as f:
+                        f_content = f.read()
+                    key = single_file.replace(f_prefix, "").split(".")[0].split("_")[1]
+                    value = f_content.split("\n")
+                    style_dict[key] = value
+        return style_dict
+
+    def merge_rvcamp_and_pixnet(self, rvcamp_json, pixnet_json):
+        ret = list()
+        logger.debug("rvcamp_json.keys: {}".format(rvcamp_json[0].keys()))
+        logger.debug("pixnet_json.keys: {}".format(pixnet_json[0].keys()))
+        style_dict = self.get_camp_style_dict()
+        for rvcamp in rvcamp_json:
+            style = None
+            tmp = 0
+            for pixnet in pixnet_json:
+                if rvcamp["camp_title"] == pixnet["camp_title"]:
+                    content = pixnet["content"]
+                    if content:
+                        for k, v in style_dict.items():
+                            matches = 0
+                            for w in v:
+                                cnt = content.count(w)
+                                matches += cnt
+                            if matches > tmp:
+                                tmp = matches
+                                style = k
+                    break
+            if style:
+                rvcamp["style"] = style
+                ret.append(rvcamp)
+        return ret
+
+    def camplist_to_mongodb(self, json_data, drop):
+        conn = None
+        try:
+            conn = MongoClient(db_config["mongodb"])
+            db = conn.test
+            coll = db.camplist
+            if drop:
+                coll.drop()
+            for doc in json_data:
+                coll.update({"camp_title": doc["camp_title"]}, doc, upsert=True)
+        except Exception as e:
+            logger.error("Error:", e)
+        finally:
+            if conn:
+                conn.close()
+                logger.debug("connection closed ...")
+
+    def camplist_to_mysql(self, json_data):
+        conn = None
+        try:
+            conn = MySQLdb.connect(**db_config["mysql"])
+            conn.autocommit(False)
+            cur = conn.cursor()
+            sql = "delete from camp_tels"
+            res = cur.execute(sql)
+            logger.debug("sql: {}, res: {}".format(sql, res))
+            sql = "delete from camp_features"
+            res = cur.execute(sql)
+            logger.debug("sql: {}, res: {}".format(sql, res))
+            sql = "delete from camp_list"
+            res = cur.execute(sql)
+            logger.debug("sql: {}, res: {}".format(sql, res))
+            ins_datas = []
+            for data in json_data:
+                ins_data = (
+                    data["camp_title"], data["camp_site"], data["addr"], (data["latlong"] if data["latlong"] else "NA"),
+                    data["location"],
+                    data["style"])
+                ins_datas.append(ins_data)
+            sql = ("insert into camp_list ( \n"
+                   + "camp_title, camp_site, addr, latlong, location, style \n"
+                   + ") values ( \n"
+                   + "%s, %s, %s, %s, %s, %s \n"
+                   + ")")
+            res = cur.executemany(sql, ins_datas)
+            logger.debug("sql: {}, res: {}".format(sql, res))
+            feature_datas = []
+            tel_datas = []
+            for data in json_data:
+                camp_id = None
+                sql = "select camp_id from camp_list where camp_title=%s"
+                cur.execute(sql, (data["camp_title"],))
+                row = cur.fetchone()
+                camp_id = row[0]
+                for feature in data["features"]:
+                    feature_datas.append((camp_id, feature))
+                for tel in data["tel"]:
+                    if tel_datas.count((camp_id, tel)) != 0:
+                        print(">>>> ", tel)
+                        continue
+                    tel_datas.append((camp_id, tel))
+            sql = ("insert into camp_features ( \n"
+                   + "camp_id, feature \n"
+                   + ") values ( \n"
+                   + "%s, %s \n"
+                   + ")")
+            res = cur.executemany(sql, feature_datas)
+            logger.debug("sql: {}, res: {}".format(sql, res))
+            sql = ("insert into camp_tels ( \n"
+                   + "camp_id, tel \n"
+                   + ") values ( \n"
+                   + "%s, %s \n"
+                   + ")")
+            res = cur.executemany(sql, tel_datas)
+            logger.debug("sql: {}, res: {}".format(sql, res))
+            conn.commit()
+        except Exception as e:
+            logger.error("Error: {}".format(e.with_traceback()))
+            if conn:
+                conn.rollback()
+        finally:
+            if conn:
+                conn.close()
+                logger.debug("conn.close() ...")
+
 
 if __name__ == '__main__':
     cc = CampCrawler()
@@ -377,6 +504,7 @@ if __name__ == '__main__':
     pixnet_file_path = path_config["crawler"] + "/pixnet.csv"
     fb_file_path = path_config["crawler"] + "/fb.csv"
     evshhips_file_path = path_config["crawler"] + "/evshhips.csv"
+    camplist_file_path = path_config["crawler"] + "/camplist.csv"
     """
     爬露營窩轉到csv和mongodb
     """
@@ -403,6 +531,19 @@ if __name__ == '__main__':
     """
     將何師夫痞客邦懶人包, 爬出部落格並寫入mongodb
     """
-    evshhips_json = cc.extract_evshhips()
+    # evshhips_json = cc.extract_evshhips()
     # cc.evshhips_to_mongodb(evshhips_json, True)
-    json_to_csv(evshhips_json, evshhips_file_path)
+    # json_to_csv(evshhips_json, evshhips_file_path)
+    """
+    將露營窩(營地基本資料)與痞客邦(文章轉換成營地風格)的資料合併
+    """
+    # rvcamp_json = csv_to_json(rvcamp_file_path)
+    # pixnet_json = csv_to_json(pixnet_file_path)
+    # camplist_json = cc.merge_rvcamp_and_pixnet(rvcamp_json, pixnet_json)
+    # cc.camplist_to_mongodb(camplist_json, True)
+    # json_to_csv(camplist_json, camplist_file_path)
+    """
+    將camplist寫入MySQL
+    """
+    camplist_json = csv_to_json(camplist_file_path)
+    cc.camplist_to_mysql(camplist_json)

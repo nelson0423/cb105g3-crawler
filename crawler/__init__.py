@@ -17,7 +17,15 @@ logger = logging.getLogger("crawler")
 
 gmail = {"addr": "iiicb105g3@gmail.com", "pwd": "cb105g3-III"}
 db_config = {
-    "mongodb": "mongodb://localhost:27017/"
+    "mongodb": "mongodb://localhost:27017/",
+    "mysql": {
+        "host": "localhost",
+        "port": 3306,
+        "db": "camp_db",
+        "user": "root",
+        "passwd": "root123",
+        "charset": "utf8"
+    }
 }
 path_config = {
     "crawler": "/temp/crawler"
