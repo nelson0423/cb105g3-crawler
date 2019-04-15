@@ -11,6 +11,7 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 import os
 import MySQLdb
+from urllib.request import urlretrieve
 
 warnings.filterwarnings("ignore")
 
@@ -496,6 +497,44 @@ class CampCrawler(object):
                 conn.close()
                 logger.debug("conn.close() ...")
 
+    def extract_google_images(self, keyword, prefix, collect_cnt, img_dir):
+        driver = Chrome("./chromedriver")
+        driver.set_window_rect(10, 10, 1027, 768)
+        if not os.path.exists(img_dir):
+            os.makedirs(img_dir)
+        keyword = quote(keyword)
+        logger.debug("keyword: {}, collect_cnt{}".format(keyword, collect_cnt))
+        url_pattern = "https://www.google.com/search?q={}&source=lnms&tbm=isch&sa=X&ved=0ahUKEwi33-bootHhAhVXyIsBHXN5CAMQ_AUIDigB&biw=1920&bih=979"
+        url = url_pattern.format(keyword)
+        driver.get(url)
+        _len = 0
+        while True:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")  # 處理延遲載入機制(JavaScript模擬滑鼠滾輪下滾)
+            time.sleep(3)  # 2秒有時會來不及, 所以改用3秒
+            hSRGPd = driver.find_elements_by_css_selector("a[jsname='hSRGPd']")
+            logger.info("已載入{}筆資料".format(len(hSRGPd)))
+            if _len == len(hSRGPd):
+                break
+            _len = len(hSRGPd)  # 筆數一樣表示沒有意見了
+        g_urls = []
+        for d in hSRGPd:
+            g_url = d.get_attribute("href")
+            g_urls.append(g_url)
+        delay = [1, 2, 3, 1.5, 2.3, 3.2]
+        for i in range(len(g_urls)):
+            try:
+                g_url = g_urls[i]
+                driver.get(g_url)
+                time.sleep(random.choice(delay))
+                img_url = driver.find_element_by_css_selector("img[class='irc_mi'][src^='http']").get_attribute("src")
+                logger.debug("img_url: {}".format(img_url))
+                fpath = img_dir + "/" + prefix + format(i, "03d") + "." + img_url.split(".")[-1]
+                urlretrieve(img_url, fpath)
+                if i > collect_cnt:
+                    break
+            except Exception as e:
+                logger.error("Error: {}".format(e))
+
 
 if __name__ == '__main__':
     cc = CampCrawler()
@@ -545,5 +584,13 @@ if __name__ == '__main__':
     """
     將camplist寫入MySQL
     """
-    camplist_json = csv_to_json(camplist_file_path)
-    cc.camplist_to_mysql(camplist_json)
+    # camplist_json = csv_to_json(camplist_file_path)
+    #     # cc.camplist_to_mysql(camplist_json)
+    """
+    將爬出指定搜尋的google圖片
+    """
+    items = ["豬尾巴", "避雷帽", "吊籃"]
+    for item in items:
+        keyword = "露營+" + item
+        prefix = item + "_"
+        cc.extract_google_images(keyword, prefix, 200, path_config["crawler"] + "/images/" + item)
