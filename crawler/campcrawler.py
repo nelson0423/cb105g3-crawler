@@ -10,7 +10,8 @@ import random
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 import os
-import MySQLdb
+# import MySQLdb
+import mysql.connector
 from urllib.request import urlretrieve
 
 warnings.filterwarnings("ignore")
@@ -432,8 +433,9 @@ class CampCrawler(object):
     def camplist_to_mysql(self, json_data):
         conn = None
         try:
-            conn = MySQLdb.connect(**db_config["mysql"])
-            conn.autocommit(False)
+            # conn = MySQLdb.connect(**db_config["mysql"])
+            conn = mysql.connector.connect(**db_config["mysql"])
+            # conn.autocommit(False)
             cur = conn.cursor()
             sql = "delete from camp_tels"
             res = cur.execute(sql)
@@ -584,13 +586,13 @@ if __name__ == '__main__':
     """
     將camplist寫入MySQL
     """
-    # camplist_json = csv_to_json(camplist_file_path)
-    #     # cc.camplist_to_mysql(camplist_json)
+    camplist_json = csv_to_json(camplist_file_path)
+    cc.camplist_to_mysql(camplist_json)
     """
     將爬出指定搜尋的google圖片
     """
-    items = ["豬尾巴", "避雷帽", "吊籃"]
-    for item in items:
-        keyword = "露營+" + item
-        prefix = item + "_"
-        cc.extract_google_images(keyword, prefix, 200, path_config["crawler"] + "/images/" + item)
+    # items = ["豬尾巴", "避雷帽", "吊籃"]
+    # for item in items:
+    #     keyword = "露營+" + item
+    #     prefix = item + "_"
+    #     cc.extract_google_images(keyword, prefix, 200, path_config["crawler"] + "/images/" + item)
