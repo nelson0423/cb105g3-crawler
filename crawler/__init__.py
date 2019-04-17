@@ -19,13 +19,13 @@ gmail = {"addr": "iiicb105g3@gmail.com", "pwd": "cb105g3-III"}
 db_config = {
     "mongodb": "mongodb://localhost:27017/",
     "mysql": {
-        "host": "10.120.38.5",
-        "port": 12345,
+        "host": "35.229.201.139",
+        "port": 3306,
         # "db": "camp_db",
         "database": "camp_db",
-        "user": "root",
+        "user": "iii",
         # "passwd": "root123",
-        "password": "Root651047!"
+        "password": "Qwer_0987"
         # "charset": "utf8"
     }
 }
