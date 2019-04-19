@@ -405,7 +405,7 @@ class CampCrawler(object):
                             for w in v:
                                 cnt = content.count(w)
                                 matches += cnt
-                                if cnt > 0:
+                                if cnt > 0 and tags.count(w) == 0:
                                     tags.append(w)
                             if matches > tmp:
                                 tmp = matches
