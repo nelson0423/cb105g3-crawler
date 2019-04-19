@@ -6,6 +6,7 @@ CREATE TABLE `camp_db`.`camp_list` (
   `latlong` VARCHAR(45) NOT NULL,
   `location` VARCHAR(45) NOT NULL,
   `style` VARCHAR(45) NOT NULL,
+  `tags` VARCHAR(1000) NOT NULL,
   PRIMARY KEY (`camp_id`),
   UNIQUE INDEX `camp_title_UNIQUE` (`camp_title` ASC) VISIBLE);
 

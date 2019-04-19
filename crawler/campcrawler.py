@@ -395,6 +395,7 @@ class CampCrawler(object):
         for rvcamp in rvcamp_json:
             style = None
             tmp = 0
+            tags = list()
             for pixnet in pixnet_json:
                 if rvcamp["camp_title"] == pixnet["camp_title"]:
                     content = pixnet["content"]
@@ -404,12 +405,15 @@ class CampCrawler(object):
                             for w in v:
                                 cnt = content.count(w)
                                 matches += cnt
+                                if cnt > 0:
+                                    tags.append(w)
                             if matches > tmp:
                                 tmp = matches
                                 style = k
                     break
             if style:
                 rvcamp["style"] = style
+                rvcamp["tags"] = " ".join(tags)
                 ret.append(rvcamp)
         return ret
 
@@ -451,12 +455,12 @@ class CampCrawler(object):
                 ins_data = (
                     data["camp_title"], data["camp_site"], data["addr"], (data["latlong"] if data["latlong"] else "NA"),
                     data["location"],
-                    data["style"])
+                    data["style"], data["tags"])
                 ins_datas.append(ins_data)
             sql = ("insert into camp_list ( \n"
-                   + "camp_title, camp_site, addr, latlong, location, style \n"
+                   + "camp_title, camp_site, addr, latlong, location, style, tags \n"
                    + ") values ( \n"
-                   + "%s, %s, %s, %s, %s, %s \n"
+                   + "%s, %s, %s, %s, %s, %s, %s \n"
                    + ")")
             res = cur.executemany(sql, ins_datas)
             logger.debug("sql: {}, res: {}".format(sql, res))
