@@ -441,6 +441,9 @@ class CampCrawler(object):
             conn = mysql.connector.connect(**db_config["mysql"])
             # conn.autocommit(False)
             cur = conn.cursor()
+            sql = "delete from camp_webs"
+            res = cur.execute(sql)
+            logger.debug("sql: {}, res: {}".format(sql, res))
             sql = "delete from camp_tels"
             res = cur.execute(sql)
             logger.debug("sql: {}, res: {}".format(sql, res))
@@ -466,32 +469,39 @@ class CampCrawler(object):
             logger.debug("sql: {}, res: {}".format(sql, res))
             feature_datas = []
             tel_datas = []
+            web_datas = []
             for data in json_data:
-                camp_id = None
-                sql = "select camp_id from camp_list where camp_title=%s"
-                cur.execute(sql, (data["camp_title"],))
-                row = cur.fetchone()
-                camp_id = row[0]
+                camp_title = data["camp_title"]
                 for feature in data["features"]:
-                    feature_datas.append((camp_id, feature))
+                    feature_datas.append((camp_title, feature))
                 for tel in data["tel"]:
-                    if tel_datas.count((camp_id, tel)) != 0:
+                    if tel == "" or tel_datas.count((camp_title, tel)) != 0:
                         print(">>>> ", tel)
                         continue
-                    tel_datas.append((camp_id, tel))
+                    tel_datas.append((camp_title, tel))
+                for ws in data["web_site"]:
+                    for item in ws.items():
+                        web_datas.append((camp_title, item[0], item[1]))
             sql = ("insert into camp_features ( \n"
-                   + "camp_id, feature \n"
+                   + "camp_title, feature \n"
                    + ") values ( \n"
                    + "%s, %s \n"
                    + ")")
             res = cur.executemany(sql, feature_datas)
             logger.debug("sql: {}, res: {}".format(sql, res))
             sql = ("insert into camp_tels ( \n"
-                   + "camp_id, tel \n"
+                   + "camp_title, tel \n"
                    + ") values ( \n"
                    + "%s, %s \n"
                    + ")")
             res = cur.executemany(sql, tel_datas)
+            logger.debug("sql: {}, res: {}".format(sql, res))
+            sql = ("insert into camp_webs ( \n"
+                  + "camp_title, name, url \n"
+                  + ") values ( \n"
+                  + "%s, %s, %s \n"
+                  + ")")
+            res = cur.executemany(sql, web_datas)
             logger.debug("sql: {}, res: {}".format(sql, res))
             conn.commit()
         except Exception as e:
