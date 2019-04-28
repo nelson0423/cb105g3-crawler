@@ -17,7 +17,8 @@ logger = logging.getLogger("crawler")
 
 gmail = {"addr": "iiicb105g3@gmail.com", "pwd": "cb105g3-III"}
 db_config = {
-    "mongodb": "mongodb://localhost:27017/",
+    "mongodb": "mongodb://35.201.196.175:27017/",
+    # "mongodb": "mongodb://localhost:27017/",
     "mysql": {
         "host": "35.229.201.139",
         "port": 3306,
