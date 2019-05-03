@@ -600,8 +600,8 @@ if __name__ == '__main__':
     """
     將camplist寫入MySQL
     """
-    # camplist_json = csv_to_json(camplist_file_path)
-    # cc.camplist_to_mysql(camplist_json)
+    camplist_json = csv_to_json(camplist_file_path)
+    cc.camplist_to_mysql(camplist_json)
     """
     將爬出指定搜尋的google圖片
     """
@@ -614,14 +614,14 @@ if __name__ == '__main__':
     """
     all csv to mongodb
     """
-    rvcamp_json = csv_to_json(rvcamp_file_path)
-    cc.rvcamp_to_mongodb(rvcamp_json, True)
-
-    pixnet_json = csv_to_json(pixnet_file_path)
-    cc.pixnet_to_mongodb(pixnet_json, True)
-
-    fb_json = csv_to_json(fb_file_path)
-    cc.fb_to_mongodb(fb_json, True)
-
-    camplist_json = csv_to_json(camplist_file_path)
-    cc.camplist_to_mongodb(camplist_json, True)
+    # rvcamp_json = csv_to_json(rvcamp_file_path)
+    # cc.rvcamp_to_mongodb(rvcamp_json, True)
+    #
+    # pixnet_json = csv_to_json(pixnet_file_path)
+    # cc.pixnet_to_mongodb(pixnet_json, True)
+    #
+    # fb_json = csv_to_json(fb_file_path)
+    # cc.fb_to_mongodb(fb_json, True)
+    #
+    # camplist_json = csv_to_json(camplist_file_path)
+    # cc.camplist_to_mongodb(camplist_json, True)

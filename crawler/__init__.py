@@ -20,13 +20,16 @@ db_config = {
     "mongodb": "mongodb://35.201.196.175:27017/",
     # "mongodb": "mongodb://localhost:27017/",
     "mysql": {
-        "host": "35.229.201.139",
+        # "host": "35.229.201.139",
+        "host": "localhost",
         "port": 3306,
-        # "db": "camp_db",
         "database": "camp_db",
-        "user": "iii",
+        # "user": "iii",
+        "user": "root",
+        # "password": "Qwer_0987"
+        "password": "root123",
+        # "db": "camp_db",
         # "passwd": "root123",
-        "password": "Qwer_0987"
         # "charset": "utf8"
     }
 }

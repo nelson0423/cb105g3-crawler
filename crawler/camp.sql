@@ -12,11 +12,12 @@ CREATE TABLE `camp_db`.`camp_list` (
   `style` VARCHAR(45) NOT NULL,
   `tags` VARCHAR(1000) NOT NULL,
   `fb_rating` DECIMAL(5,2) NOT NULL DEFAULT 0,
+  `fb_cnt` INT NULL DEFAULT 0,
   PRIMARY KEY (`camp_title`));
 -- ALTER TABLE `camp_db`.`camp_list`
 -- ADD COLUMN `fb_rating` DECIMAL(5,2) NOT NULL DEFAULT 0 AFTER `tags`;
-ALTER TABLE `camp_db`.`camp_list`
-ADD COLUMN `fb_cnt` INT NULL DEFAULT 0 AFTER `fb_rating`;
+-- ALTER TABLE `camp_db`.`camp_list`
+-- ADD COLUMN `fb_cnt` INT NULL DEFAULT 0 AFTER `fb_rating`;
 
 CREATE TABLE `camp_db`.`camp_features` (
   `camp_title` VARCHAR(45) NOT NULL,
