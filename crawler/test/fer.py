@@ -5,6 +5,8 @@ from crawler import logger
 import requests
 from bs4 import BeautifulSoup
 import warnings
+import calendar
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 
@@ -19,16 +21,25 @@ def process(url):
     fer = html.select_one("table[title^='Foreign Exchange Rates']")
     # print(fer)
     currMonth = fer.select("thead > tr > th")[2].text.strip()
-    print("### currMonth = {}".format(currMonth))
+    print("currMonth = {}".format(currMonth))
+    currMonthAry = [data for data in currMonth.split(" ") if data != ""]
+    currMonthAry.sort(reverse=False)
+    currMonthAry[1] = format({v: k for k, v in enumerate(calendar.month_name)}[currMonthAry[1]], "02d")
+    currMonthStr = "-".join(currMonthAry)
+    print("currMonthStr = {}".format(currMonthStr))
     countryEleList = fer.select("tbody > tr > th[class!='subhead1']")
-    countryList = [countryEleList[i].text.strip() for i in range(len(countryEleList))]
+    countryList = [ele.text.strip() for ele in countryEleList]
     print("len = {}, countryList = {}".format(len(countryList), countryList))
     currencyEleList = fer.select("tbody > tr > td:nth-child(2)")
-    currencyList = [currencyEleList[i].text.strip() for i in range(len(currencyEleList))]
+    currencyList = [ele.text.strip() for ele in currencyEleList]
     print("len = {}, currencyList = {}".format(len(currencyList), currencyList))
     erEleList = fer.select("tbody > tr > td:nth-child(3)")
-    erList = [erEleList[i].text.strip() for i in range(len(erEleList))]
+    erList = [ele.text.strip() for ele in erEleList]
     print("len = {}, erList = {}".format(len(erList), erList))
+    df = pd.DataFrame(list(zip(countryList, currencyList, erList)),
+                      columns=["country", "currency", "exchange_rate"])
+    print(df)
+    df.to_csv("D:/Users/nelson_chou/Desktop/FER_" + currMonthStr + ".csv", sep=',', encoding='utf-8')
     return ret
 
 
