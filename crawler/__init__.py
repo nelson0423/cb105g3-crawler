@@ -15,7 +15,7 @@ log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'log_co
 logging.config.fileConfig(log_file_path)
 logger = logging.getLogger("crawler")
 
-gmail = {"addr": "iiicb105g3@gmail.com", "pwd": "cb105g3-III"}
+gmail = {"addr": "iiicb105@gmail.com", "pwd": "cb105-III"}
 db_config = {
     "mongodb": "mongodb://35.201.196.175:27017/",
     # "mongodb": "mongodb://localhost:27017/",
